@@ -27,7 +27,7 @@ def draw_graph(rules, rules_to_show):
        
     for c in rules.iloc[i]['consequents']:
              
-            G1.add_nodes_from([a])
+            G1.add_nodes_from([c])
             
             G1.add_edge("R"+str(i), c, color=colors[i],  weight=2)
  
