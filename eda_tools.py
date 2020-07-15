@@ -252,7 +252,7 @@ def show_correlation(DATAFRAME, TARGET=None):
         print('Caution: The Matrix Scatterplot of Numeric Features is using 20% sample of the DATAFRAME')
         sns.pairplot(DATAFRAME[FEATURES].sample(frac=0.2),hue=TARGET)
 
-def unsupervised_categorization(DATAFRAME, TEXT, NUM_CATS, STOPWORDS, LANGUAGE='english', MAX_WORDS =100):
+def unsupervised_categorization(DATAFRAME, TEXT, NUM_CATS, STOPWORDS, LANGUAGE='english', MAX_WORDS =1000):
     """
     DATAFRAME: Pandas DataFrame to be included the categorization process
     TEXT: String with the column name that contains the text to be categorized
@@ -273,20 +273,21 @@ def unsupervised_categorization(DATAFRAME, TEXT, NUM_CATS, STOPWORDS, LANGUAGE='
     from sklearn.decomposition import LatentDirichletAllocation
     from sklearn.metrics import silhouette_score
     import numpy as np
-    from string import punctuation
+    from nltk.corpus import stopwords 
+    stop_words = set(stopwords.words(LANGUAGE)) 
     
     DATAFRAME[TEXT] = DATAFRAME[TEXT].str.lower()
     DATAFRAME[TEXT] = DATAFRAME[TEXT].str.replace('[0-9\.]','')
+    DATAFRAME[TEXT] = DATAFRAME[TEXT].str.replace('[^\w\s]','')
     DATAFRAME[TEXT] = DATAFRAME[TEXT].str.replace(':','')
     DATAFRAME[TEXT] = DATAFRAME[TEXT].str.replace('/',' ')
     DATAFRAME[TEXT] = DATAFRAME[TEXT].str.replace('-','')
     DATAFRAME[TEXT] = DATAFRAME[TEXT].str.replace('(','')
     DATAFRAME[TEXT] = DATAFRAME[TEXT].str.replace(')','')
     DATAFRAME[TEXT] = DATAFRAME[TEXT].str.replace('|','')
-    DATAFRAME[TEXT] = DATAFRAME[TEXT].apply(lambda x: " ".join(x for x in str(x).split() if x not in punctuation))
     DATAFRAME[TEXT] = DATAFRAME[TEXT].apply(lambda x: " ".join(x for x in str(x).split() if x not in STOPWORDS))
     
-    vectorizer = CountVectorizer(max_df=0.1, max_features=MAX_WORDS, stop_words=LANGUAGE)
+    vectorizer = CountVectorizer(max_df=0.1, max_features=MAX_WORDS, stop_words=stop_words)
     categorizer = LatentDirichletAllocation(n_components=NUM_CATS, random_state=1234)
     
     X = vectorizer.fit_transform(DATAFRAME[TEXT].values)
@@ -340,7 +341,6 @@ def supervised_categorization(DFA, TEXT, CATS, DFB, STOPWORDS, LANGUAGE='english
     Caution: This categorization is performed by a basic ML Pipeline, a CV accuracy score 
     is provided but no Train/Test split approach was applied
     """
-    from string import punctuation
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.preprocessing import MaxAbsScaler
     from sklearn.linear_model import LogisticRegression
@@ -348,32 +348,34 @@ def supervised_categorization(DFA, TEXT, CATS, DFB, STOPWORDS, LANGUAGE='english
     from sklearn.pipeline import make_pipeline
     from sklearn.model_selection import cross_val_score, KFold
     import numpy as np
+    from nltk.corpus import stopwords 
+    stop_words = set(stopwords.words(LANGUAGE)) 
     import pandas as pd
     pd.set_option('mode.chained_assignment',None)
     
     DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).lower())
     DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).replace('[0-9\.]',''))
+    DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).replace('[^\w\s]',''))
     DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).replace(':',''))
     DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).replace('/',' '))
     DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).replace('-',''))
     DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).replace('(',''))
     DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).replace(')',''))
     DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).replace('|',''))
-    DFA[TEXT] = DFA[TEXT].apply(lambda x: " ".join(x for x in str(x).split() if x not in punctuation))
     DFA[TEXT] = DFA[TEXT].apply(lambda x: " ".join(x for x in str(x).split() if x not in STOPWORDS))
     
     DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).lower())
     DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).replace('[0-9\.]',''))
+    DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).replace('[^\w\s]',''))
     DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).replace(':',''))
     DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).replace('/',' '))
     DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).replace('-',''))
     DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).replace('(',''))
     DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).replace(')',''))
     DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).replace('|',''))
-    DFB[TEXT] = DFB[TEXT].apply(lambda x: " ".join(x for x in str(x).split() if x not in punctuation))
     DFB[TEXT] = DFB[TEXT].apply(lambda x: " ".join(x for x in str(x).split() if x not in STOPWORDS))
 
-    vectorizer = TfidfVectorizer(strip_accents='ascii', stop_words=LANGUAGE, ngram_range=(1,3), max_features=1000)
+    vectorizer = TfidfVectorizer(strip_accents='ascii', stop_words=stop_words, ngram_range=(1,3), max_features=1000)
     scaler = MaxAbsScaler()
     clf = LogisticRegression(max_iter=500, random_state=1234)
     
