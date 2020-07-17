@@ -36,7 +36,7 @@ def eda_plot_cat(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
     print("----------------------------------------------------")
     for column in DATAFRAME.columns:
     
-        if (DATAFRAME[column].dtype=='O' or DATAFRAME[column].dtype=='int64') and (DATAFRAME[column].nunique() == len(DATAFRAME)):
+        if (DATAFRAME[column].dtype=='O' or DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='int32' or DATAFRAME[column].dtype=='float32' or DATAFRAME[column].dtype=='float64') and (DATAFRAME[column].nunique() == len(DATAFRAME)):
             print("High Cardinality Feature: ","[",column, "]"," Possible unique identifier!")
     
         elif (DATAFRAME[column].dtype=='O') and (DATAFRAME[column].nunique() <= MAX_ELEMENTS):
@@ -70,7 +70,7 @@ def eda_plot_cat(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
             plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0)
             plt.show()
     
-        elif (DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='float64') and (DATAFRAME[column].nunique()<=MAX_ELEMENTS): 
+        elif (DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='float64' or DATAFRAME[column].dtype=='float32' or DATAFRAME[column].dtype=='int32') and (DATAFRAME[column].nunique()<=MAX_ELEMENTS): 
             plt.figure(figsize=(W,H))
             plt.xticks(rotation=90)
             sns.countplot(DATAFRAME[column],hue=TARGET,data=DATAFRAME,order = DATAFRAME[column].value_counts().index)
@@ -78,7 +78,7 @@ def eda_plot_cat(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
             plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0)
             plt.show()
     
-        elif (DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='float64') and (DATAFRAME[column].nunique()>MAX_ELEMENTS): 
+        elif (DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='float64' or DATAFRAME[column].dtype=='int32' or DATAFRAME[column].dtype=='float32') and (DATAFRAME[column].nunique()>MAX_ELEMENTS): 
             plt.figure(figsize=(W,H))
             plt.xticks(rotation=90)
             sns.boxplot(TARGET, DATAFRAME[column],data=DATAFRAME)
@@ -125,7 +125,7 @@ def eda_plot_cont(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
     print("----------------------------------------------------")
     for column in DATAFRAME.columns:
     
-        if (DATAFRAME[column].dtype=='O' or DATAFRAME[column].dtype=='int64') and (DATAFRAME[column].nunique() == len(DATAFRAME)):
+        if (DATAFRAME[column].dtype=='O' or DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='int32' or DATAFRAME[column].dtype=='float64' or DATAFRAME[column].dtype=='float32') and (DATAFRAME[column].nunique() == len(DATAFRAME)):
             print("High Cardinality Feature: ","[",column, "]"," Possible unique identifier!")
     
         elif (DATAFRAME[column].dtype=='O') and (DATAFRAME[column].nunique() <= MAX_ELEMENTS):
@@ -152,7 +152,7 @@ def eda_plot_cont(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
             plt.title(column +" "+TIME_RULE+" distribution by " + TARGET)
             plt.show()
     
-        elif (DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='float64'): 
+        elif (DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='float64' or DATAFRAME[column].dtype=='int32' or DATAFRAME[column].dtype=='float32'): 
             plt.figure(figsize=(W,H))
             plt.xticks(rotation=90)
             sns.scatterplot(DATAFRAME[column],TARGET,data=DATAFRAME)
@@ -261,7 +261,8 @@ def unsupervised_categorization(DATAFRAME, TEXT, NUM_CATS, STOPWORDS, LANGUAGE='
     example of this input: "lotus notes fcf user have na"
     LANGUAGE: Language of the TEXT column to be categorized
     MAX_WORDS: Most frequent words to be included in the categorization process. Default is 1000
-    Notes and References: 
+    Notes and References:
+     * "nltk" is a dependency, make sure to install and update this library prior to execute this function
      * A LatentDirichletAllocation (Topic Modeling) estimator is fit with the TEXT column
      * Sebastian Raschka, Vahid Mirjalili. Python Machine Learning. 2nd Edition. 
        Birmingham, UK: Packt Publishing, 2017. ISBN: 978-3958457331. Pages 276-277
@@ -317,7 +318,7 @@ def reduce_cardinality(DATAFRAME, MAX_ELEMENTS):
     import pandas as pd
     pd.set_option('mode.chained_assignment',None)
     for column in DATAFRAME.columns:        
-        if (DATAFRAME[column].dtype=='O' or DATAFRAME[column].dtype=='int64') and (DATAFRAME[column].nunique() == len(DATAFRAME)):
+        if (DATAFRAME[column].dtype=='O' or DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='int32' or DATAFRAME[column].dtype=='float32' or DATAFRAME[column].dtype=='float64') and (DATAFRAME[column].nunique() == len(DATAFRAME)):
             print("High Cardinality Feature: ","[",column, "]"," Possible unique identifier, excluded from this process!")
         
         elif (DATAFRAME[column].dtype=='O') and (DATAFRAME[column].nunique() > MAX_ELEMENTS):
@@ -337,7 +338,9 @@ def supervised_categorization(DFA, TEXT, CATS, DFB, STOPWORDS, LANGUAGE='english
     STOPWORDS: String (in lowercase) with additional stopwords to be removed from the TEXT column, 
     example of this input: "lotus notes fcf user have na"
     LANGUAGE: Language of the TEXT, 'english' by default
-    Note: Only to be used if the categories defined in DFA should be extended to DFB and if DFA and DFB have the same domain
+    Notes: 
+    * "nltk" is a dependency, make sure to install and update this library prior to execute this function
+    * Only to be used if the categories defined in DFA should be extended to DFB and if DFA and DFB have the same domain
     Caution: This categorization is performed by a basic ML Pipeline, a CV accuracy score 
     is provided but no Train/Test split approach was applied
     """
@@ -530,3 +533,27 @@ def get_transactions_df(DATAFRAME, TRANSACTION_ID, ITEM):
     tdf = DATAFRAME.groupby(TRANSACTION_ID)[ITEM].agg(lambda x: ','.join(tuple(x))).reset_index()
     tdf['Transaction_List'] = tdf[ITEM].apply(lambda x: str(x).split(','))
     return tdf[[TRANSACTION_ID,'Transaction_List']]
+
+def stratified_sampler(DATAFRAME, GROUP, NUMBER=20):
+    """
+    DATAFRAME: Pandas dataframe to sample from
+    GROUP: Name of the column to be used in the stratified sample
+    NUMBER: Sample size
+    Notes:
+    * Returns a Pandas dataframe with the stratified sample, if there is an item with a value smaller than the required sample size,
+    the entire "sub-population" for this item is included in the resulting dataframe
+    Example: sdf = stratified_sampler(DATAFRAME=df, GROUP="reported_source", NUMBER=20)
+    """
+    import pandas as pd
+    vdf = DATAFRAME[GROUP].value_counts().reset_index()
+    sampled_df = []
+    
+    for row in vdf.index:
+        if vdf[GROUP].iloc[row] >= NUMBER:
+            sampled_df.append(DATAFRAME[DATAFRAME[GROUP]==vdf["index"].iloc[row]].sample(NUMBER))
+        else:
+            sampled_df.append(DATAFRAME[DATAFRAME[GROUP]==vdf["index"].iloc[row]].sample(vdf[GROUP].iloc[row]))
+            print("Smaller value of observations than required group for feature: ","[",vdf["index"].iloc[row],"]","; Including all the tickets in the population!!")
+    
+    stratified_df = pd.concat(sampled_df)
+    return(stratified_df)
