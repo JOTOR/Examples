@@ -557,3 +557,39 @@ def stratified_sampler(DATAFRAME, GROUP, NUMBER=20):
     
     stratified_df = pd.concat(sampled_df)
     return(stratified_df)
+
+def combine_tabular_files(PATH, EXT):
+    """
+    PATH: Complete path where the files are located, for example: 'C:/MyFolder/Reports/'
+    EXT: Extension of the files, xlsx, xls and csv are supported
+    Result: A csv file with all the rows of the files appended
+    Requirements: All files must have the same schema, structure, tab name, column names, file extension and the 
+    info to be appended must be located in the first tab
+    Example: combine_tabular_files(PATH ='C:/MyFolder/Reports/', EXT='xlsx')
+    Note: If you get a ValueError, check the extension of the files located on PATH and 
+    make sure is the same used in EXT
+    """
+    import pandas as pd
+    import glob
+    
+    if(EXT=='csv'):
+        data = []
+        for file in glob.glob(PATH+'*'+EXT):
+            data.append(pd.read_csv(file, encoding='latin-1'))
+            print("Reading File: "+str(len(data)))
+        df = pd.concat(data)
+        df.drop_duplicates(inplace=True)
+        df.to_csv(PATH+'Combined_Info.csv', index=False, encoding='utf-8-sig')
+        print("Process has been completed, A file called 'Combined_Info.csv' has been included into PATH")
+    
+    elif(EXT=='xls' or EXT=='xlsx'):
+        data = []
+        for file in glob.glob(PATH+'*'+EXT):
+            data.append(pd.read_excel(file, encoding='latin-1'))
+            print("Reading File: "+str(len(data)))
+        df = pd.concat(data)
+        df.drop_duplicates(inplace=True)
+        df.to_csv(PATH+'Combined_Info.csv', index=False, encoding='utf-8-sig')
+        print("Process has been completed, A file called 'Combined_Info.csv' has been included into PATH")
+    else:
+        print("File Extension "+EXT+" is not supported!!")
