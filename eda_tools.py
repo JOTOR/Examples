@@ -40,6 +40,7 @@ def eda_plot_cat(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
             print("High Cardinality Feature: ","[",column, "]"," Possible unique identifier!")
     
         elif (DATAFRAME[column].dtype=='O') and (DATAFRAME[column].nunique() <= MAX_ELEMENTS):
+            DATAFRAME[column].fillna(value='-', inplace=True)
             plt.figure(figsize=(W,H))
             plt.xticks(rotation=90)
             sns.countplot(DATAFRAME[column],hue=TARGET,data=DATAFRAME,order = DATAFRAME[column].value_counts().index)
@@ -48,6 +49,7 @@ def eda_plot_cat(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
             plt.show()
     
         elif (DATAFRAME[column].dtype=='O') and (DATAFRAME[column].nunique() > MAX_ELEMENTS or DATAFRAME[column].nunique() <= len(DATAFRAME)-1):
+            DATAFRAME[column].fillna(value='-', inplace=True)
             cnts = DATAFRAME[column].value_counts()[0:MAX_ELEMENTS].index.values
             cnts = pd.DataFrame(data=cnts, columns=[column])
             cnts['CAT']="TOP_ELEMENT"
@@ -129,6 +131,7 @@ def eda_plot_cont(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
             print("High Cardinality Feature: ","[",column, "]"," Possible unique identifier!")
     
         elif (DATAFRAME[column].dtype=='O') and (DATAFRAME[column].nunique() <= MAX_ELEMENTS):
+            DATAFRAME[column].fillna(value='-', inplace=True)
             plt.figure(figsize=(W,H))
             plt.xticks(rotation=90)
             sns.boxplot(x=DATAFRAME[column],y=TARGET, data=DATAFRAME)
@@ -136,6 +139,7 @@ def eda_plot_cont(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
             plt.show()
     
         elif (DATAFRAME[column].dtype=='O') and (DATAFRAME[column].nunique() > MAX_ELEMENTS or DATAFRAME[column].nunique() <= len(DATAFRAME)-1):
+            DATAFRAME[column].fillna(value='-', inplace=True)
             cnts = DATAFRAME[column].value_counts()[0:MAX_ELEMENTS].index.values
             cnts = pd.DataFrame(data=cnts, columns=[column])
             cnts['CAT']="TOP_ELEMENT"
