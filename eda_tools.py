@@ -186,6 +186,7 @@ def clean_feature_names(DATAFRAME):
     normalized_names = normalized_names.str.replace(")","")
     normalized_names = normalized_names.str.replace("/","_")
     normalized_names = normalized_names.str.replace("?","")
+    normalized_names = normalized_names.str.replace("¿","")
     normalized_names = normalized_names.str.replace("*","")
     normalized_names = normalized_names.str.replace("º","")
     normalized_names = normalized_names.str.replace("ª","")
@@ -278,12 +279,13 @@ def unsupervised_categorization(DATAFRAME, TEXT, NUM_CATS, STOPWORDS, LANGUAGE='
     from sklearn.decomposition import LatentDirichletAllocation
     from sklearn.metrics import silhouette_score
     import numpy as np
+    import re
     from nltk.corpus import stopwords 
     stop_words = set(stopwords.words(LANGUAGE)) 
     
     DATAFRAME[TEXT] = DATAFRAME[TEXT].str.lower()
-    DATAFRAME[TEXT] = DATAFRAME[TEXT].str.replace('[0-9\.]','')
-    DATAFRAME[TEXT] = DATAFRAME[TEXT].str.replace('[^\w\s]','')
+    DATAFRAME[TEXT] = DATAFRAME[TEXT].apply(lambda x: re.sub('[0-9]','',str(x)))
+    DATAFRAME[TEXT] = DATAFRAME[TEXT].apply(lambda x: re.sub('[^\w\s]','',str(x)))
     DATAFRAME[TEXT] = DATAFRAME[TEXT].str.replace(':','')
     DATAFRAME[TEXT] = DATAFRAME[TEXT].str.replace('/',' ')
     DATAFRAME[TEXT] = DATAFRAME[TEXT].str.replace('-','')
@@ -355,14 +357,15 @@ def supervised_categorization(DFA, TEXT, CATS, DFB, STOPWORDS, LANGUAGE='english
     from sklearn.pipeline import make_pipeline
     from sklearn.model_selection import cross_val_score, KFold
     import numpy as np
+    import re
     from nltk.corpus import stopwords 
     stop_words = set(stopwords.words(LANGUAGE)) 
     import pandas as pd
     pd.set_option('mode.chained_assignment',None)
     
     DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).lower())
-    DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).replace('[0-9\.]',''))
-    DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).replace('[^\w\s]',''))
+    DFA[TEXT] = DFA[TEXT].apply(lambda x: re.sub('[0-9]','',str(x)))
+    DFA[TEXT] = DFA[TEXT].apply(lambda x: re.sub('[^\w\s]','',str(x)))
     DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).replace(':',''))
     DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).replace('/',' '))
     DFA[TEXT] = DFA[TEXT].apply(lambda x: str(x).replace('-',''))
@@ -372,8 +375,8 @@ def supervised_categorization(DFA, TEXT, CATS, DFB, STOPWORDS, LANGUAGE='english
     DFA[TEXT] = DFA[TEXT].apply(lambda x: " ".join(x for x in str(x).split() if x not in STOPWORDS))
     
     DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).lower())
-    DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).replace('[0-9\.]',''))
-    DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).replace('[^\w\s]',''))
+    DFB[TEXT] = DFB[TEXT].apply(lambda x: re.sub('[0-9]','',str(x)))
+    DFB[TEXT] = DFB[TEXT].apply(lambda x: re.sub('[^\w\s]','',str(x)))
     DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).replace(':',''))
     DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).replace('/',' '))
     DFB[TEXT] = DFB[TEXT].apply(lambda x: str(x).replace('-',''))
