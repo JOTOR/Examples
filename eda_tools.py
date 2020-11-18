@@ -590,7 +590,7 @@ def auto_eda_binary_negative_plotly(DATAFRAME, TARGET, LABEL_MAP={"Made":1, "Mis
     DATAFRAME: Pandas dataframe to be used on the analysis
     TARGET: Name of the dataframe column to be used as the target, it should be binary!!
     LABEL_MAP: Dictionary with the numerical encoding of the target labels, it is recommended 
-    to asssign a '0' to the negative label (Missed)
+    to asssign a '0' to the negative label (Missed/No/DSAT)
     Notes: 
     * plotly.express as px is a dependency so make sure to install/upgrade this library prior to execute this function
     * Please remove the unique identifier (if any) of the dataframe prior to execute this function
@@ -645,7 +645,7 @@ def auto_eda_binary_negative_plotly(DATAFRAME, TARGET, LABEL_MAP={"Made":1, "Mis
     for feature in neg_inf_df.Feature.unique():
         if feature in DATAFRAME.columns:
             if types_df[types_df.index==feature]["Type"][0]=="object":
-                if DATAFRAME[feature].nunique() < 25:
+                if DATAFRAME[feature].nunique() < 10:
                     aux = DATAFRAME.groupby([feature, TARGET]).count()['VOL'].reset_index()
                     fig = px.bar(aux, x=feature, y='VOL',color=TARGET, barmode='group', title=feature+" influence over "+TARGET, text='VOL')
                     fig.show()
@@ -671,7 +671,7 @@ def auto_eda_binary_positive_plotly(DATAFRAME, TARGET, LABEL_MAP={"Made":1, "Mis
     DATAFRAME: Pandas dataframe to be used on the analysis
     TARGET: Name of the dataframe column to be used as the target, it should be binary!!
     LABEL_MAP: Dictionary with the numerical encoding of the target labels, it is recommended 
-    to asssign a '0' to the negative label (Missed)
+    to asssign a '0' to the negative label (Missed/No/DSAT)
     Notes: 
     * plotly.express as px is a dependency so make sure to install/upgrade this library prior to execute this function
     * Please remove the unique identifier (if any) of the dataframe prior to execute this function
@@ -708,7 +708,7 @@ def auto_eda_binary_positive_plotly(DATAFRAME, TARGET, LABEL_MAP={"Made":1, "Mis
     print("Process replicated with an accuracy of {:.2f}%".format(score))
     coef_df = pd.DataFrame(data=lr.steps[1][1].coef_[0], index=X.columns, columns=['Inf']).sort_values(by="Inf", ascending=False)
     
-    neg_inf_df = coef_df[coef_df['Inf']<0]
+    neg_inf_df = coef_df[coef_df['Inf']>0]
     neg_inf_df = coef_df[0:50]
     
     print("Top 15 Items with a Positive Influence over "+TARGET)
@@ -726,7 +726,7 @@ def auto_eda_binary_positive_plotly(DATAFRAME, TARGET, LABEL_MAP={"Made":1, "Mis
     for feature in neg_inf_df.Feature.unique():
         if feature in DATAFRAME.columns:
             if types_df[types_df.index==feature]["Type"][0]=="object":
-                if DATAFRAME[feature].nunique() < 25:
+                if DATAFRAME[feature].nunique() < 10:
                     aux = DATAFRAME.groupby([feature, TARGET]).count()['VOL'].reset_index()
                     fig = px.bar(aux, x=feature, y='VOL',color=TARGET, barmode='group', title=feature+" influence over "+TARGET, text='VOL')
                     fig.show()
@@ -744,3 +744,137 @@ def auto_eda_binary_positive_plotly(DATAFRAME, TARGET, LABEL_MAP={"Made":1, "Mis
                 fig = px.box(data_frame=DATAFRAME, x=feature, y=TARGET, orientation='h', title=feature+" influence over "+TARGET)
                 fig.show()
                 print(DATAFRAME.groupby(TARGET)[feature].describe())
+
+def auto_eda_reg_negative_plotly(DATAFRAME, TARGET):
+    """
+    This function fits a Ridge Regression and provides the coefficients of the features with the
+    highest negative influence over the target and the charts involving those features
+    DATAFRAME: Pandas dataframe to be used on the analysis
+    TARGET: Name of the dataframe column to be used as the target, it should be numeric (discrete or continuous)!!
+    Notes: 
+    * plotly.express as px is a dependency so make sure to install/upgrade this library prior to execute this function
+    * Please remove the unique identifier (if any) of the dataframe prior to execute this function
+    """
+    import pandas as pd
+    pd.set_option('mode.chained_assignment',None)
+    import numpy as np
+    from sklearn.linear_model import Ridge
+    from sklearn.preprocessing import MinMaxScaler, StandardScaler
+    from sklearn.pipeline import make_pipeline
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import plotly.express as px
+    
+    types_df = pd.DataFrame(data=DATAFRAME.dtypes, columns=['Type'])
+    #Time Stamps or date related features are not supported
+    FEATURES = types_df[types_df['Type']!='datetime64[ns]'].index.values
+    DATAFRAME = DATAFRAME[FEATURES]
+    #Encoding the labels
+    DATAFRAME['VOL'] = 1
+    #Removing null records, no impute estimator was used
+    DATAFRAME.dropna(inplace=True)
+    
+    X = pd.get_dummies(DATAFRAME.drop(columns=[TARGET,'VOL']), prefix_sep='*')
+    y = DATAFRAME[TARGET]
+    
+    lr = make_pipeline(MinMaxScaler(feature_range=(0, 1)),
+                       Ridge(random_state=1234, max_iter=2500, fit_intercept=True, normalize=True))
+    print("Fitting Ridge Regression")
+    lr.fit(X, y)
+    score = lr.score(X, y)
+    score = score*100
+    print("Process replicated with an accuracy of {:.2f}%".format(score))
+    coef_df = pd.DataFrame(data=lr.steps[1][1].coef_.reshape(-1,1), index=X.columns, columns=['Inf']).sort_values(by="Inf")
+    
+    neg_inf_df = coef_df[coef_df['Inf']<0]
+    neg_inf_df = coef_df[0:50]
+    
+    print("Top 15 Items with a Negative Influence over "+TARGET)
+    print(neg_inf_df[0:15])
+    
+    neg_inf_df.reset_index(inplace=True)
+    neg_inf_df.columns = ["Feature_Item", "Imp"]
+    #Including an '*'' in order to avoid an index out of range error
+    neg_inf_df['Feature_Item']= neg_inf_df['Feature_Item'].apply(lambda x: x+"*")
+    neg_inf_df['Feature'] = neg_inf_df['Feature_Item'].apply(lambda x: x.split("*")[0])
+    neg_inf_df['Item'] = neg_inf_df['Feature_Item'].apply(lambda x: x.split("*")[1])
+        
+    for feature in neg_inf_df.Feature.unique():
+        if feature in DATAFRAME.columns:
+            if types_df[types_df.index==feature]["Type"][0]=="object":
+                ITEMS = neg_inf_df[neg_inf_df["Feature"]==feature]['Item'].unique()
+                sub_df = DATAFRAME[DATAFRAME[feature].isin(ITEMS)]
+                fig = px.box(data_frame =sub_df, x=feature, y=TARGET, title=feature+" influence over "+TARGET)
+                fig.show()
+            elif types_df[types_df.index==feature]["Type"][0]=="float64" or types_df[types_df.index==feature]["Type"][0]=="float32" or types_df[types_df.index==feature]["Type"][0]=="int32" or types_df[types_df.index==feature]["Type"][0]=="int64":
+                fig = px.scatter(data_frame=DATAFRAME, x=feature, y=TARGET, title=feature+" influence over "+TARGET)
+                fig.show()
+                figg = px.density_heatmap(data_frame=DATAFRAME, x=feature, y=TARGET, title=feature+" influence over "+TARGET)
+                figg.show()
+                
+def auto_eda_reg_positive_plotly(DATAFRAME, TARGET):
+    """
+    This function fits a Ridge Regression and provides the coefficients of the features with the
+    highest positive influence over the target and the charts involving those features
+    DATAFRAME: Pandas dataframe to be used on the analysis
+    TARGET: Name of the dataframe column to be used as the target, it should be numeric (discrete or continuous)!!
+    Notes: 
+    * plotly.express as px is a dependency so make sure to install/upgrade this library prior to execute this function
+    * Please remove the unique identifier (if any) of the dataframe prior to execute this function
+    """
+    import pandas as pd
+    pd.set_option('mode.chained_assignment',None)
+    import numpy as np
+    from sklearn.linear_model import Ridge
+    from sklearn.preprocessing import MinMaxScaler, StandardScaler 
+    from sklearn.pipeline import make_pipeline
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import plotly.express as px
+    
+    types_df = pd.DataFrame(data=DATAFRAME.dtypes, columns=['Type'])
+    #Time Stamps or date related features are not supported
+    FEATURES = types_df[types_df['Type']!='datetime64[ns]'].index.values
+    DATAFRAME = DATAFRAME[FEATURES]
+    #Encoding the labels
+    DATAFRAME['VOL'] = 1
+    #Removing null records, no impute estimator was used
+    DATAFRAME.dropna(inplace=True)
+    
+    X = pd.get_dummies(DATAFRAME.drop(columns=[TARGET,'VOL']), prefix_sep='*')
+    y = DATAFRAME[TARGET]
+    
+    lr = make_pipeline(MinMaxScaler(feature_range=(0, 1)),
+                       Ridge(random_state=1234, max_iter=2500, fit_intercept=True, normalize=True))
+    print("Fitting SGD Regression")
+    lr.fit(X, y)
+    score = lr.score(X, y)
+    score = score*100
+    print("Process replicated with an accuracy of {:.2f}%".format(score))
+    coef_df = pd.DataFrame(data=lr.steps[1][1].coef_.reshape(-1,1), index=X.columns, columns=['Inf']).sort_values(by="Inf", ascending=False)
+    
+    neg_inf_df = coef_df[coef_df['Inf']>0]
+    neg_inf_df = coef_df[0:50]
+    
+    print("Top 15 Items with a Positive Influence over "+TARGET)
+    print(neg_inf_df[0:15])
+    
+    neg_inf_df.reset_index(inplace=True)
+    neg_inf_df.columns = ["Feature_Item", "Imp"]
+    #Including an '*'' in order to avoid an index out of range error
+    neg_inf_df['Feature_Item']= neg_inf_df['Feature_Item'].apply(lambda x: x+"*")
+    neg_inf_df['Feature'] = neg_inf_df['Feature_Item'].apply(lambda x: x.split("*")[0])
+    neg_inf_df['Item'] = neg_inf_df['Feature_Item'].apply(lambda x: x.split("*")[1])
+        
+    for feature in neg_inf_df.Feature.unique():
+        if feature in DATAFRAME.columns:
+            if types_df[types_df.index==feature]["Type"][0]=="object":
+                ITEMS = neg_inf_df[neg_inf_df["Feature"]==feature]['Item'].unique()
+                sub_df = DATAFRAME[DATAFRAME[feature].isin(ITEMS)]
+                fig = px.box(data_frame =sub_df, x=feature, y=TARGET, title=feature+" influence over "+TARGET)
+                fig.show()
+            elif types_df[types_df.index==feature]["Type"][0]=="float64" or types_df[types_df.index==feature]["Type"][0]=="float32" or types_df[types_df.index==feature]["Type"][0]=="int32" or types_df[types_df.index==feature]["Type"][0]=="int64":
+                fig = px.scatter(data_frame=DATAFRAME, x=feature, y=TARGET, title=feature+" influence over "+TARGET)
+                fig.show()
+                figg = px.density_heatmap(data_frame=DATAFRAME, x=feature, y=TARGET, title=feature+" influence over "+TARGET)
+                figg.show()
