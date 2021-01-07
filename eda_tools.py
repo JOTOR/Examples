@@ -43,7 +43,7 @@ def eda_plot_cat(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
             DATAFRAME[column].fillna(value='-', inplace=True)
             plt.figure(figsize=(W,H))
             plt.xticks(rotation=90)
-            sns.countplot(DATAFRAME[column],hue=TARGET,data=DATAFRAME,order = DATAFRAME[column].value_counts().index)
+            sns.countplot(x=DATAFRAME[column],hue=TARGET,data=DATAFRAME,order = DATAFRAME[column].value_counts().index)
             plt.title(column+" Distribution by "+TARGET)
             plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0)
             plt.show()
@@ -57,7 +57,7 @@ def eda_plot_cat(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
             sub_df = sub_df.dropna().drop(columns=['CAT'])
             plt.figure(figsize=(W,H))
             plt.xticks(rotation=90)
-            sns.countplot(sub_df[column],hue=TARGET,data=sub_df, order = sub_df[column].value_counts().index)
+            sns.countplot(x=sub_df[column],hue=TARGET,data=sub_df, order = sub_df[column].value_counts().index)
             plt.title("Top "+ str(MAX_ELEMENTS)+" Elements of "+column+" by "+TARGET)
             plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0)
             plt.show()
@@ -75,7 +75,7 @@ def eda_plot_cat(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
         elif (DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='float64' or DATAFRAME[column].dtype=='float32' or DATAFRAME[column].dtype=='int32') and (DATAFRAME[column].nunique()<=MAX_ELEMENTS): 
             plt.figure(figsize=(W,H))
             plt.xticks(rotation=90)
-            sns.countplot(DATAFRAME[column],hue=TARGET,data=DATAFRAME,order = DATAFRAME[column].value_counts().index)
+            sns.countplot(x=DATAFRAME[column],hue=TARGET,data=DATAFRAME,order = DATAFRAME[column].value_counts().index)
             plt.title(column+" Distribution by "+TARGET)
             plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0)
             plt.show()
@@ -83,7 +83,7 @@ def eda_plot_cat(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
         elif (DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='float64' or DATAFRAME[column].dtype=='int32' or DATAFRAME[column].dtype=='float32') and (DATAFRAME[column].nunique()>MAX_ELEMENTS): 
             plt.figure(figsize=(W,H))
             plt.xticks(rotation=90)
-            sns.boxplot(TARGET, DATAFRAME[column],data=DATAFRAME)
+            sns.boxplot(x=TARGET, y=DATAFRAME[column],data=DATAFRAME)
             plt.title(column+" Distribution by "+TARGET)
             plt.show()
         
@@ -159,7 +159,7 @@ def eda_plot_cont(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
         elif (DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='float64' or DATAFRAME[column].dtype=='int32' or DATAFRAME[column].dtype=='float32'): 
             plt.figure(figsize=(W,H))
             plt.xticks(rotation=90)
-            sns.scatterplot(DATAFRAME[column],TARGET,data=DATAFRAME)
+            sns.scatterplot(x=DATAFRAME[column],y=TARGET,data=DATAFRAME)
             plt.title(column+" Distribution by "+TARGET)
             plt.show()
     
@@ -185,6 +185,7 @@ def clean_feature_names(DATAFRAME):
     normalized_names = normalized_names.str.replace("(","")
     normalized_names = normalized_names.str.replace(")","")
     normalized_names = normalized_names.str.replace("/","_")
+    normalized_names = normalized_names.str.replace("\\","_")
     normalized_names = normalized_names.str.replace("?","")
     normalized_names = normalized_names.str.replace("¿","")
     normalized_names = normalized_names.str.replace("*","")
@@ -246,15 +247,29 @@ def show_correlation(DATAFRAME, TARGET=None):
             FEATURES.append(column)
             
     if TARGET == None:
-        sns.heatmap(DATAFRAME[FEATURES].corr(),annot=True,cmap='bwr')
+        sns.heatmap(DATAFRAME[FEATURES].corr(method='pearson'),annot=True,cmap='bwr')
         plt.title('Pearson Correlation Coefficient of Numeric Features')
-        print('Caution: The Matrix Scatterplot of Numeric Features is using 20% sample of the DATAFRAME')
+        plt.show()
+        sns.heatmap(DATAFRAME[FEATURES].corr(method='kendall'),annot=True,cmap='bwr')
+        plt.title('Kendall Correlation Coefficient of Numeric Features')
+        plt.show()
+        sns.heatmap(DATAFRAME[FEATURES].corr(method='spearman'),annot=True,cmap='bwr')
+        plt.title('Spearman Correlation Coefficient of Numeric Features')
+        plt.show()
+        print('Caution: The Matrix Scatterplot of Numeric Features is using a 20% sample of the DATAFRAME')
         sns.pairplot(DATAFRAME[FEATURES].sample(frac=0.2))
     else:
         FEATURES.append(TARGET)
-        sns.heatmap(DATAFRAME[FEATURES].corr(),annot=True,cmap='bwr')
+        sns.heatmap(DATAFRAME[FEATURES].corr(method='pearson'),annot=True,cmap='bwr')
         plt.title('Pearson Correlation Coefficient of Numeric Features')
-        print('Caution: The Matrix Scatterplot of Numeric Features is using 20% sample of the DATAFRAME')
+        plt.show()
+        sns.heatmap(DATAFRAME[FEATURES].corr(method='kendall'),annot=True,cmap='bwr')
+        plt.title('Kendall Correlation Coefficient of Numeric Features')
+        plt.show()
+        sns.heatmap(DATAFRAME[FEATURES].corr(method='spearman'),annot=True,cmap='bwr')
+        plt.title('Spearman Correlation Coefficient of Numeric Features')
+        plt.show()
+        print('Caution: The Matrix Scatterplot of Numeric Features is using a 20% sample of the DATAFRAME')
         sns.pairplot(DATAFRAME[FEATURES].sample(frac=0.2),hue=TARGET)
 
 def unsupervised_categorization(DATAFRAME, TEXT, NUM_CATS, STOPWORDS, LANGUAGE='english', MAX_WORDS =1000):
@@ -279,6 +294,7 @@ def unsupervised_categorization(DATAFRAME, TEXT, NUM_CATS, STOPWORDS, LANGUAGE='
     from sklearn.decomposition import LatentDirichletAllocation
     from sklearn.metrics import silhouette_score
     import numpy as np
+    import pandas as pd
     import re
     from nltk.corpus import stopwords 
     stop_words = set(stopwords.words(LANGUAGE)) 
@@ -299,7 +315,7 @@ def unsupervised_categorization(DATAFRAME, TEXT, NUM_CATS, STOPWORDS, LANGUAGE='
     
     for topic in DATAFRAME["Category_Number"].unique():
         print("Category Number: ", topic)
-        print(DATAFRAME[DATAFRAME['Category_Number']==topic].sample(n=10, replace=True)[TEXT])
+        print(pd.Series(" ".join(DATAFRAME[DATAFRAME["Category_Number"]==topic][TEXT]).split()).value_counts()[0:10])
     print("----------------------------------------------------------------------------")
 
     print("Volume Distribution by Category Number:")
@@ -403,13 +419,14 @@ def eda_plot_uni(DATAFRAME):
         profile = ProfileReport(DATAFRAME, title="Pandas Profile Report of DATAFRAME [Minimal]", minimal=True)
         profile.to_notebook_iframe()
 
-def time_series_anomaly(DATAFRAME, DATE, NUM, W=12, H=4):
+def time_series_anomaly(DATAFRAME, DATE, NUM, W=12, H=4, K=21):
     """
     DATAFRAME: Pandas DataFrame to be used in the analysis
     DATE: Column Name with the Date Feature of the time series
     NUM: Column Name with the numeric feature of the time series
     W: Width of the resulting plot
     H: Height of the resulting plot
+    K: Number of neighboors / sensibility of the anomaly detection
     Example: time_series_anomaly(ts,'Day','Volume')
     """
     from sklearn.neighbors import LocalOutlierFactor
@@ -419,7 +436,7 @@ def time_series_anomaly(DATAFRAME, DATE, NUM, W=12, H=4):
     
     DATAFRAME.set_index(DATE,inplace=True)
     
-    lof = LocalOutlierFactor(n_neighbors=21)
+    lof = LocalOutlierFactor(n_neighbors=K)
     outs = lof.fit_predict(np.array(DATAFRAME[NUM]).reshape(-1,1))
     DATAFRAME['Anomaly'] = outs
     print("Anomalies have been included in DATAFRAME, Flagged as [-1]")
@@ -427,7 +444,7 @@ def time_series_anomaly(DATAFRAME, DATE, NUM, W=12, H=4):
     plt.figure(figsize=(W,H))
     plt.xticks(rotation=90)
     plt.plot(DATAFRAME[NUM])
-    plt.scatter(DATAFRAME.index, DATAFRAME[NUM], c=outs, cmap='viridis')
+    plt.scatter(x=DATAFRAME.index, y=DATAFRAME[NUM], c=outs, cmap='viridis')
     plt.title('Anomalies in the Time Series')
     
     print(DATAFRAME[DATAFRAME['Anomaly']==-1])
@@ -589,11 +606,13 @@ def auto_eda_binary_negative_plotly(DATAFRAME, TARGET, LABEL_MAP={"Made":1, "Mis
     highest negative influence over the target and the charts involving those features
     DATAFRAME: Pandas dataframe to be used on the analysis
     TARGET: Name of the dataframe column to be used as the target, it should be binary!!
-    LABEL_MAP: Dictionary with the numerical encoding of the target labels, it is recommended 
-    to asssign a '0' to the negative label (Missed/No/DSAT)
+    LABEL_MAP: Dictionary with the numerical encoding of the target labels, ***it is recommended 
+    to asssign a '0' to the negative label (Missed/No/DSAT)***
     Notes: 
     * plotly.express as px is a dependency so make sure to install/upgrade this library prior to execute this function
     * Please remove the unique identifier (if any) of the dataframe prior to execute this function
+    * This function does accept continuous features
+    * Please do not encode the categories with numbers, use "Yes", "No", "A", "B", "C" instead
     """
     import pandas as pd
     pd.set_option('mode.chained_assignment',None)
@@ -670,11 +689,13 @@ def auto_eda_binary_positive_plotly(DATAFRAME, TARGET, LABEL_MAP={"Made":1, "Mis
     highest positive influence over the target and the charts involving those features
     DATAFRAME: Pandas dataframe to be used on the analysis
     TARGET: Name of the dataframe column to be used as the target, it should be binary!!
-    LABEL_MAP: Dictionary with the numerical encoding of the target labels, it is recommended 
-    to asssign a '0' to the negative label (Missed/No/DSAT)
+    LABEL_MAP: Dictionary with the numerical encoding of the target labels, ***it is recommended 
+    to asssign a '0' to the negative label (Missed/No/DSAT)***
     Notes: 
     * plotly.express as px is a dependency so make sure to install/upgrade this library prior to execute this function
     * Please remove the unique identifier (if any) of the dataframe prior to execute this function
+    * This function does accept continuous features
+    * Please do not encode the categories with numbers, use "Yes", "No", "A", "B", "C" instead
     """
     import pandas as pd
     pd.set_option('mode.chained_assignment',None)
@@ -754,6 +775,8 @@ def auto_eda_reg_negative_plotly(DATAFRAME, TARGET):
     Notes: 
     * plotly.express as px is a dependency so make sure to install/upgrade this library prior to execute this function
     * Please remove the unique identifier (if any) of the dataframe prior to execute this function
+    * This function does accept continuous features
+    * Please do not encode the categories with numbers, use "Yes", "No", "A", "B", "C" instead
     """
     import pandas as pd
     pd.set_option('mode.chained_assignment',None)
@@ -821,6 +844,8 @@ def auto_eda_reg_positive_plotly(DATAFRAME, TARGET):
     Notes: 
     * plotly.express as px is a dependency so make sure to install/upgrade this library prior to execute this function
     * Please remove the unique identifier (if any) of the dataframe prior to execute this function
+    * This function does accept continuous features
+    * Please do not encode the categories with numbers, use "Yes", "No", "A", "B", "C" instead
     """
     import pandas as pd
     pd.set_option('mode.chained_assignment',None)
@@ -846,7 +871,7 @@ def auto_eda_reg_positive_plotly(DATAFRAME, TARGET):
     
     lr = make_pipeline(MinMaxScaler(feature_range=(0, 1)),
                        Ridge(random_state=1234, max_iter=2500, fit_intercept=True, normalize=True))
-    print("Fitting SGD Regression")
+    print("Fitting Ridge Regression")
     lr.fit(X, y)
     score = lr.score(X, y)
     score = score*100
