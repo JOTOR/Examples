@@ -180,23 +180,23 @@ def clean_feature_names(DATAFRAME):
     df.columns
     ['color_reference', 'number_rooms', 'area_total', 'zone']
     """
-    normalized_names = DATAFRAME.columns.str.replace(".","_")
-    normalized_names = normalized_names.str.replace(" ","_")
-    normalized_names = normalized_names.str.replace("(","")
-    normalized_names = normalized_names.str.replace(")","")
-    normalized_names = normalized_names.str.replace("/","_")
-    normalized_names = normalized_names.str.replace("\\","_")
-    normalized_names = normalized_names.str.replace("?","")
-    normalized_names = normalized_names.str.replace("¿","")
-    normalized_names = normalized_names.str.replace("*","")
-    normalized_names = normalized_names.str.replace("º","")
-    normalized_names = normalized_names.str.replace("ª","")
-    normalized_names = normalized_names.str.replace("|","")
-    normalized_names = normalized_names.str.replace("-","_")
-    normalized_names = normalized_names.str.replace("·","")
-    normalized_names = normalized_names.str.replace("@","")
-    normalized_names = normalized_names.str.replace("$","")
-    normalized_names = normalized_names.str.replace("+","")
+    normalized_names = DATAFRAME.columns.str.replace(".","_",regex=False)
+    normalized_names = normalized_names.str.replace(" ","_",regex=False)
+    normalized_names = normalized_names.str.replace("(","",regex=False)
+    normalized_names = normalized_names.str.replace(")","",regex=False)
+    normalized_names = normalized_names.str.replace("/","_",regex=False)
+    normalized_names = normalized_names.str.replace("\\","_",regex=False)
+    normalized_names = normalized_names.str.replace("?","",regex=False)
+    normalized_names = normalized_names.str.replace("¿","",regex=False)
+    normalized_names = normalized_names.str.replace("*","",regex=False)
+    normalized_names = normalized_names.str.replace("º","",regex=False)
+    normalized_names = normalized_names.str.replace("ª","",regex=False)
+    normalized_names = normalized_names.str.replace("|","",regex=False)
+    normalized_names = normalized_names.str.replace("-","_",regex=False)
+    normalized_names = normalized_names.str.replace("·","",regex=False)
+    normalized_names = normalized_names.str.replace("@","",regex=False)
+    normalized_names = normalized_names.str.replace("$","",regex=False)
+    normalized_names = normalized_names.str.replace("+","",regex=False)
     normalized_names = normalized_names.str.lower()
     DATAFRAME.columns = normalized_names
 
@@ -525,7 +525,7 @@ def analyze_data(DATAFRAME, TARGET):
     print("Top 15 Features with a negative/positive influence over TARGET:")
     print(m.varimp(use_pandas=True)[:15])
     print("----------------------------------------------------------------")
-
+    
 def get_transactions_df(DATAFRAME, TRANSACTION_ID, ITEM):
     """
     DATAFRAME: Pandas DataFrame to be used in the function
@@ -998,3 +998,34 @@ def get_text_between_delimiters(START="<", END=">", TEXT="TEXT"):
     """
     res = TEXT[TEXT.find(start)+len(start):TEXT.rfind(end)]
     return res
+
+def shap_waterfall_plot(data, shap_values, expected_value):
+    """
+    Arguments:
+    data = data used to get the shap values in the explainer object
+    shap_values = shap values provided by the explainer object
+    expected_value = expected value provided by the explainer object
+    -------------------------------------------------------------------
+    Examples:
+    shap_waterfall_plot(data=X_test.iloc[0,:], shap_values=shap_values[0], expected_value=explainer.expected_value[0])
+    shap_waterfall_plot(data=X_test_d.iloc[0], shap_values=sv[0], expected_value=explainer.expected_value[0])
+    -------------------------------------------------------------------
+    Notes:
+    * waterfallcharts is a requirement, make sure this library is installed, otherwise it can be installed using pip (pip install waterfallcharts)
+    * In theory, this function can be applied in regression and classification problems
+    -------------------------------------------------------------------
+    """
+    import waterfall_chart
+    import numpy as np
+    import pandas as pd
+    
+    data_ = pd.concat([pd.Series({'base_value': expected_value}), data], axis="rows")
+    vals_ = np.hstack((expected_value.reshape(-1), shap_values.reshape(-1)))
+    print("Feature Values:")
+    print(data_)
+    print('\n')
+    print("Shap Values:")
+    print(vals_)
+    print('\n')
+    print('Waterfall Plot:')
+    waterfall_chart.plot(data_.index, vals_, net_label="Prediction", sorted_value=False)
