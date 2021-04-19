@@ -345,6 +345,26 @@ def reduce_cardinality(DATAFRAME, MAX_ELEMENTS):
     
     print("Process has been completed!!")
 
+def reduce_cardinality_single_column(DATAFRAME, MAX_ELEMENTS, COLUMN):
+    """
+    DATAFRAME: Pandas DataFrame to be used in the process
+    MAX_ELEMENTS: Number of Top Categories to be defined, categories with a small volume will be replaced by "Other"
+    Caution: The category "Other" is replaced in DATAFRAME directly!!
+    """
+    import pandas as pd
+    pd.set_option('mode.chained_assignment',None)
+
+    if (DATAFRAME[COLUMN].dtype=='O' or DATAFRAME[COLUMN].dtype=='int64' or DATAFRAME[COLUMN].dtype=='int32' or DATAFRAME[COLUMN].dtype=='float32' or DATAFRAME[COLUMN].dtype=='float64') and (DATAFRAME[COLUMN].nunique() == len(DATAFRAME)):
+        print("High Cardinality Feature: ","[",COLUMN, "]"," Possible unique identifier, excluded from this process!")
+        
+    elif (DATAFRAME[COLUMN].dtype=='O') and (DATAFRAME[COLUMN].nunique() > MAX_ELEMENTS):
+        counts = DATAFRAME[COLUMN].value_counts()
+        mask = DATAFRAME[COLUMN].isin(counts[MAX_ELEMENTS:].index)
+        DATAFRAME[COLUMN].loc[mask]="Other"
+        print("Cardinality in feature","[",COLUMN,"]","has been reduced")
+    
+    print("Process has been completed!!")
+
 def supervised_categorization(DFA, TEXT, CATS, DFB, STOPWORDS, LANGUAGE='english'):
     """
     DFA: Pandas DataFrame that contains the text and the categories that were assigned through a 'human' categorization
@@ -996,36 +1016,5 @@ def get_text_between_delimiters(START="<", END=">", TEXT="TEXT"):
     TEXT: Text that contains the string between the two delimiters
     Reference: https://stackoverflow.com/questions/3368969/find-string-between-two-substrings
     """
-    res = TEXT[TEXT.find(start)+len(start):TEXT.rfind(end)]
+    res = TEXT[TEXT.find(START)+len(START):TEXT.rfind(END)]
     return res
-
-def shap_waterfall_plot(data, shap_values, expected_value):
-    """
-    Arguments:
-    data = data used to get the shap values in the explainer object
-    shap_values = shap values provided by the explainer object
-    expected_value = expected value provided by the explainer object
-    -------------------------------------------------------------------
-    Examples:
-    shap_waterfall_plot(data=X_test.iloc[0,:], shap_values=shap_values[0], expected_value=explainer.expected_value[0])
-    shap_waterfall_plot(data=X_test_d.iloc[0], shap_values=sv[0], expected_value=explainer.expected_value[0])
-    -------------------------------------------------------------------
-    Notes:
-    * waterfallcharts is a requirement, make sure this library is installed, otherwise it can be installed using pip (pip install waterfallcharts)
-    * In theory, this function can be applied in regression and classification problems
-    -------------------------------------------------------------------
-    """
-    import waterfall_chart
-    import numpy as np
-    import pandas as pd
-    
-    data_ = pd.concat([pd.Series({'base_value': expected_value}), data], axis="rows")
-    vals_ = np.hstack((expected_value.reshape(-1), shap_values.reshape(-1)))
-    print("Feature Values:")
-    print(data_)
-    print('\n')
-    print("Shap Values:")
-    print(vals_)
-    print('\n')
-    print('Waterfall Plot:')
-    waterfall_chart.plot(data_.index, vals_, net_label="Prediction", sorted_value=False)
