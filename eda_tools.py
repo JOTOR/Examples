@@ -497,7 +497,7 @@ def anomaly_binary_target(DATAFRAME, FEATURES, TARGET, MAX_ELEMENTS, PL, NL, W=8
         sub_df = pd.concat([DATAFRAME[TARGET],sub_df],axis="columns")
         sub_df = sub_df.groupby(TARGET).sum()
         sub_df = np.transpose(sub_df)
-        sub_df['Var'] = sub_df.loc[:,PL] - sub_df.loc[:,NL]
+        sub_df['Var'] = sub_df.loc[:,PL].astype('int') - sub_df.loc[:,NL].astype('int')
         sub_df.sort_values(by='Var',inplace=True)
         sub_df.head(MAX_ELEMENTS).plot.bar(figsize=(W,H))
         plt.title('Data Elements with Highest Negative Difference')
@@ -1018,3 +1018,50 @@ def get_text_between_delimiters(START="<", END=">", TEXT="TEXT"):
     """
     res = TEXT[TEXT.find(START)+len(START):TEXT.rfind(END)]
     return res
+
+def circular_variable_dataframe(DATAFRAME, COL, UNIT):
+    '''
+    To be used in the transformation of circular variables or time related variables/features
+    
+    Parameters
+    ----------
+    DATAFRAME : Pandas dataframe
+    COL : Name of the column with the time unit (Day, Month, Day of the Month, Hour, Minute)
+    UNIT : Constant unit to be used in the transformation of the circular variable, for example, 12 for Months, 24 for Hours, 
+    60 for Minutes, 365 for days of the year
+    
+    Returns
+    -------
+    Two additional columns with a suffix "_s" or "_c" are added to DATAFRAME
+    
+    Notes:
+    If the resulting variables are included in a ML Pipeline is suggested to use a MaxAbsScaler in the ColumnTransformer
+    '''
+    import numpy as np
+    CONS = (2 * np.pi) / UNIT
+    DATAFRAME[COL+'_s'] = np.sin(DATAFRAME[COL]*CONS)
+    DATAFRAME[COL+'_c'] = np.cos(DATAFRAME[COL]*CONS)
+
+def circular_variable_single_value(X, UNIT):
+    '''
+    To be used in the transformation of circular variables or time related variables/features
+    
+    Parameters
+    ----------
+    X : single value to be transformed
+    UNIT : UNIT : Constant unit to be used in the transformation of the circular variable, for example, 12 for Months, 24 for Hours, 
+    60 for Minutes, 365 for days of the year
+    
+    Returns
+    -------
+    col_sin : SIN transformation of the unit and single value X
+    col_cos : COS transformation of the unit and single value X
+    
+    Notes:
+    If the resulting variables are included in a ML Pipeline is suggested to use a MaxAbsScaler in the ColumnTransformer
+    '''
+    import numpy as np
+    CONS = (2 * np.pi) / UNIT
+    col_sin = np.sin(X*CONS)
+    col_cos = np.cos(X*CONS)
+    return col_sin, col_cos
