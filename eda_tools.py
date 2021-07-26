@@ -83,7 +83,7 @@ def eda_plot_cat(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
         elif (DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='float64' or DATAFRAME[column].dtype=='int32' or DATAFRAME[column].dtype=='float32') and (DATAFRAME[column].nunique()>MAX_ELEMENTS): 
             plt.figure(figsize=(W,H))
             plt.xticks(rotation=90)
-            sns.boxplot(x=TARGET, y=DATAFRAME[column],data=DATAFRAME)
+            sns.boxenplot(y=TARGET, x=DATAFRAME[column],data=DATAFRAME, orient='h')
             plt.title(column+" Distribution by "+TARGET)
             plt.show()
         
@@ -134,7 +134,7 @@ def eda_plot_cont(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
             DATAFRAME[column].fillna(value='-', inplace=True)
             plt.figure(figsize=(W,H))
             plt.xticks(rotation=90)
-            sns.boxplot(x=DATAFRAME[column],y=TARGET, data=DATAFRAME)
+            sns.boxenplot(y=DATAFRAME[column],x=TARGET, data=DATAFRAME, orient='h')
             plt.title(column+" Distribution by "+TARGET)
             plt.show()
     
@@ -147,7 +147,7 @@ def eda_plot_cont(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
             sub_df = sub_df.dropna().drop(columns=['CAT'])
             plt.figure(figsize=(W,H))
             plt.xticks(rotation=90)
-            sns.boxplot(x=sub_df[column],y=TARGET,data=sub_df)
+            sns.boxenplot(y=sub_df[column],x=TARGET,data=sub_df, orient='h')
             plt.title("Top "+ str(MAX_ELEMENTS)+" Elements of "+column+" by "+TARGET)
             plt.show()
 
