@@ -1113,3 +1113,71 @@ def plot_prophet_prediction(ori_df, pred_df, cutoff_date, title):
     plt.fill_between(pdf[pdf['ds']>=cutoff_date]['ds'], pdf[pdf['ds']>=cutoff_date]['yhat_upper'], pdf[pdf['ds']>=cutoff_date]['yhat_lower'],alpha=0.1)
     plt.legend(bbox_to_anchor=(1.15, 0.5), loc=0, borderaxespad=0)
     plt.title(title)
+
+def clip_ouliers(DATAFRAME, COL):
+    """
+    DATAFRAME: Pandas DataFrame
+    COL: Name of the numeric column to impute the outliers from
+    Returns: Array with the imputed outliers
+    Example: impute_ouliers(DATAFRAME=df, COL='Magnitude')
+    Note: Outliers are imputed (not removed!!) based on the IQR formula/rule
+    """
+    import numpy as np
+    IQR = (np.quantile(DATAFRAME[COL], 0.75)) - (np.quantile(DATAFRAME[COL], 0.25))
+    upper = (np.quantile(DATAFRAME[COL], 0.75))+(1.5 * IQR)
+    lower = (np.quantile(DATAFRAME[COL], 0.25))-(1.5 * IQR)
+    return np.clip(DATAFRAME[COL], lower, upper)
+
+def get_feature_names(column_transformer):
+    """Utility function to get the feature names from the data preprocessing pipeline
+    #https://johaupt.github.io/scikit-learn/tutorial/python/data%20processing/ml%20pipeline/model%20interpretation/columnTransformer_feature_names.html
+    # Function provided by Johannes Haupt
+    Example: feature_names = get_feature_names(preproccesor)
+    """
+    import warnings
+    import sklearn
+    import pandas as pd
+    import numpy as np
+    def get_names(trans):
+        if trans == 'drop' or (
+                hasattr(column, '__len__') and not len(column)):
+            return []
+        if trans == 'passthrough':
+            if hasattr(column_transformer, '_df_columns'):
+                if ((not isinstance(column, slice))
+                        and all(isinstance(col, str) for col in column)):
+                    return column
+                else:
+                    return column_transformer._df_columns[column]
+            else:
+                indices = np.arange(column_transformer._n_features)
+                return ['x%d' % i for i in indices[column]]
+        if not hasattr(trans, 'get_feature_names'):
+            warnings.warn("Transformer %s (type %s) does not "
+                                 "provide get_feature_names. "
+                                 "Will return input column names if available"
+                                 % (str(name), type(trans).__name__))
+            if column is None:
+                return []
+            else:
+                return [name + "__" + f for f in column]
+
+        return [name + "__" + f for f in trans.get_feature_names()]
+    
+    feature_names = []
+
+    if type(column_transformer) == sklearn.pipeline.Pipeline:
+        l_transformers = [(name, trans, None, None) for step, name, trans in column_transformer._iter()]
+    else:
+        l_transformers = list(column_transformer._iter(fitted=True))
+
+    for name, trans, column, _ in l_transformers: 
+        if type(trans) == sklearn.pipeline.Pipeline:
+            _names = get_feature_names(trans)
+            if len(_names)==0:
+                _names = [name + "__" + f for f in column]
+            feature_names.extend(_names)
+        else:
+            feature_names.extend(get_names(trans))
+    
+    return feature_names
