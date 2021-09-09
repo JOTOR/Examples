@@ -1035,7 +1035,7 @@ def circular_variable_dataframe(DATAFRAME, COL, UNIT):
     Two additional columns with a suffix "_s" or "_c" are added to DATAFRAME
     
     Notes:
-    If the resulting variables are included in a ML Pipeline is suggested to use a MaxAbsScaler in the ColumnTransformer
+    If the resulting variables are included in a ML Pipeline is suggested to use a MaxAbsScaler/SimpleImputer in the ColumnTransformer
     '''
     import numpy as np
     CONS = (2 * np.pi) / UNIT
@@ -1119,7 +1119,7 @@ def clip_ouliers(DATAFRAME, COL):
     DATAFRAME: Pandas DataFrame
     COL: Name of the numeric column to impute the outliers from
     Returns: Array with the imputed outliers
-    Example: impute_ouliers(DATAFRAME=df, COL='Magnitude')
+    Example: df['Clipped'] = clip_ouliers(DATAFRAME=df, COL='Magnitude')
     Note: Outliers are imputed (not removed!!) based on the IQR formula/rule
     """
     import numpy as np
@@ -1181,3 +1181,25 @@ def get_feature_names(column_transformer):
             feature_names.extend(get_names(trans))
     
     return feature_names
+
+def anonymise_categorical_variable(DATAFRAME=df, COLS=['Name']):
+    """
+    Parameters
+    ----------
+    DATAFRAME : Pandas dataframe
+    COLS : Array of colum names of the features to be anonymised
+    Returns
+    -------
+    New colums in DATAFRAME with the suffix "Anonym" and with the anonymised features
+
+    """
+    for col in COLS:
+        ind = DATAFRAME[col].unique()
+        anom = []
+        res_dict = {}
+        
+        [anom.append(col+"_"+str(i)) for i in range(len(ind))]
+        
+        [res_dict.update({k:v}) for k, v in zip(ind, anom)]
+            
+        DATAFRAME[col+'_'+'Anonym'] = DATAFRAME[col].map(res_dict)
