@@ -1182,7 +1182,7 @@ def get_feature_names(column_transformer):
     
     return feature_names
 
-def anonymise_categorical_variable(DATAFRAME=df, COLS=['Name']):
+def anonymise_categorical_variable(DATAFRAME, COLS):
     """
     Parameters
     ----------
