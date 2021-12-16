@@ -1162,7 +1162,7 @@ def get_feature_names(column_transformer):
             else:
                 return [name + "__" + f for f in column]
 
-        return [name + "__" + f for f in trans.get_feature_names()]
+        return [name + "__" + f for f in trans.get_feature_names_out()]
     
     feature_names = []
 
