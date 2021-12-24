@@ -870,7 +870,7 @@ def auto_eda_reg_positive_plotly(DATAFRAME, TARGET):
     import pandas as pd
     pd.set_option('mode.chained_assignment',None)
     import numpy as np
-    from sklearn.linear_model import Ridge
+    from sklearn.linear_model import Lasso
     from sklearn.preprocessing import MinMaxScaler, StandardScaler 
     from sklearn.pipeline import make_pipeline
     import matplotlib.pyplot as plt
