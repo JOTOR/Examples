@@ -658,7 +658,7 @@ def auto_eda_binary_negative_plotly(DATAFRAME, TARGET, LABEL_MAP={"Made":1, "Mis
     y = DATAFRAME[TARGET]
     
     lr = make_pipeline(MinMaxScaler(feature_range=(0,1)),
-                       LogisticRegression(C=1, class_weight='balanced', random_state=1234, max_iter=2500))
+                       LogisticRegression(C=0.1, class_weight='balanced', random_state=1234, max_iter=2500, penalty='l1', solver='liblinear'))
     print("Fitting Logistic Regression")
     lr.fit(X, y)
     score = lr.score(X, y)
@@ -741,7 +741,7 @@ def auto_eda_binary_positive_plotly(DATAFRAME, TARGET, LABEL_MAP={"Made":1, "Mis
     y = DATAFRAME[TARGET]
     
     lr = make_pipeline(MinMaxScaler(feature_range=(0,1)),
-                       LogisticRegression(C=1, class_weight='balanced', random_state=1234, max_iter=2500))
+                       LogisticRegression(C=0.1, class_weight='balanced', random_state=1234, max_iter=2500, penalty='l1', solver='liblinear'))
     print("Fitting Logistic Regression")
     lr.fit(X, y)
     score = lr.score(X, y)
@@ -788,7 +788,7 @@ def auto_eda_binary_positive_plotly(DATAFRAME, TARGET, LABEL_MAP={"Made":1, "Mis
 
 def auto_eda_reg_negative_plotly(DATAFRAME, TARGET):
     """
-    This function fits a Ridge Regression and provides the coefficients of the features with the
+    This function fits a Lasso Regression and provides the coefficients of the features with the
     highest negative influence over the target and the charts involving those features
     DATAFRAME: Pandas dataframe to be used on the analysis
     TARGET: Name of the dataframe column to be used as the target, it should be numeric (discrete or continuous)!!
@@ -801,7 +801,7 @@ def auto_eda_reg_negative_plotly(DATAFRAME, TARGET):
     import pandas as pd
     pd.set_option('mode.chained_assignment',None)
     import numpy as np
-    from sklearn.linear_model import Ridge
+    from sklearn.linear_model import Lasso
     from sklearn.preprocessing import MinMaxScaler, StandardScaler
     from sklearn.pipeline import make_pipeline
     import matplotlib.pyplot as plt
@@ -821,8 +821,8 @@ def auto_eda_reg_negative_plotly(DATAFRAME, TARGET):
     y = DATAFRAME[TARGET]
     
     lr = make_pipeline(MinMaxScaler(feature_range=(0, 1)),
-                       Ridge(random_state=1234, max_iter=2500, fit_intercept=True, normalize=True))
-    print("Fitting Ridge Regression")
+                       Lasso(alpha=5, random_state=1234, max_iter=2500, fit_intercept=True))
+    print("Fitting Lasso Regression")
     lr.fit(X, y)
     score = lr.score(X, y)
     score = score*100
@@ -857,7 +857,7 @@ def auto_eda_reg_negative_plotly(DATAFRAME, TARGET):
                 
 def auto_eda_reg_positive_plotly(DATAFRAME, TARGET):
     """
-    This function fits a Ridge Regression and provides the coefficients of the features with the
+    This function fits a Lasso Regression and provides the coefficients of the features with the
     highest positive influence over the target and the charts involving those features
     DATAFRAME: Pandas dataframe to be used on the analysis
     TARGET: Name of the dataframe column to be used as the target, it should be numeric (discrete or continuous)!!
@@ -890,8 +890,8 @@ def auto_eda_reg_positive_plotly(DATAFRAME, TARGET):
     y = DATAFRAME[TARGET]
     
     lr = make_pipeline(MinMaxScaler(feature_range=(0, 1)),
-                       Ridge(random_state=1234, max_iter=2500, fit_intercept=True, normalize=True))
-    print("Fitting Ridge Regression")
+                       Lasso(alpha=5, random_state=1234, max_iter=2500, fit_intercept=True))
+    print("Fitting Lasso Regression")
     lr.fit(X, y)
     score = lr.score(X, y)
     score = score*100
