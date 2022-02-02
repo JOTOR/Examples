@@ -1118,3 +1118,37 @@ def anonymise_categorical_variable(DATAFRAME, COLS):
         [res_dict.update({k:v}) for k, v in zip(ind, anom)]
             
         DATAFRAME[col+'_'+'Anonym'] = DATAFRAME[col].map(res_dict)
+
+def countbar_with_perc(DATAFRAME, CATEGORY, VALUES, W=6, H=4, PAL='tab10', TITLE='I am Title'):
+    """
+    Parameters:
+    DATAFRAME: Pandas dataframe
+    CATEGORY: Column name of Pandas Dataframe that contains the Categorical variable
+    VALUES: Column name of Pandas Dataframe that contains the frequencies of the Categorical variable
+    W: Width of resulting plot
+    H: Height of resulting plot
+    PAL: Palette or colormap to be used, 'tab10' is used by default
+    TITLE: Title of the resulting plot
+    Returns:
+    Barchart with a "marginal" percent distribution
+    """
+    import numpy as np
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import matplotlib.ticker as mtick
+    import seaborn as sns
+    
+    dfc = DATAFRAME.groupby(CATEGORY)[VALUES].sum().reset_index().sort_values(by=VALUES, ascending=False)
+    dfc['Total'] = ""
+    
+    fig, ax = plt.subplots(nrows=1, ncols=2, gridspec_kw={'width_ratios': [30, 1]},figsize=(W,H))
+    sns.barplot(x=CATEGORY, y=VALUES, data=dfc, ax=ax[0], palette=PAL)
+    ax[0].set_title(TITLE, fontdict={'fontsize':14})
+    sns.histplot(x='Total', weights=(dfc[VALUES]/dfc[VALUES].sum())*100, hue=CATEGORY, multiple='stack', data=dfc, 
+                ax=ax[1], legend=False, palette=PAL, alpha=0.5)
+    ax[1].set_ylabel('')
+    ax[1].set_xlabel('')
+    ax[1].yaxis.set_major_formatter(mtick.PercentFormatter())
+    ax[1].set_yticks(np.arange(0,110,10))
+    plt.tight_layout()
+    plt.show()
