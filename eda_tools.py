@@ -34,60 +34,46 @@ def eda_plot_cat(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
     print("GENERATING AUTOMATIC EXPLORATORY DATAFRAME ANALYSIS PLOTS")
     print("----------------------------------------------------")
     print("----------------------------------------------------")
-    for column in DATAFRAME.columns:
     
-        if (DATAFRAME[column].dtype=='O' or DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='int32' or DATAFRAME[column].dtype=='float32' or DATAFRAME[column].dtype=='float64') and (DATAFRAME[column].nunique() == len(DATAFRAME)):
+    for column in DATAFRAME.columns:
+        if DATAFRAME[column].nunique() == len(DATAFRAME):
             print("High Cardinality Feature: ","[",column, "]"," Possible unique identifier!")
     
-        elif (DATAFRAME[column].dtype=='O') and (DATAFRAME[column].nunique() <= MAX_ELEMENTS):
-            DATAFRAME[column].fillna(value='-', inplace=True)
-            plt.figure(figsize=(W,H))
-            plt.xticks(rotation=90)
-            sns.countplot(x=DATAFRAME[column],hue=TARGET,data=DATAFRAME,order = DATAFRAME[column].value_counts().index)
-            plt.title(column+" Distribution by "+TARGET)
-            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0)
-            plt.show()
-    
-        elif (DATAFRAME[column].dtype=='O') and (DATAFRAME[column].nunique() > MAX_ELEMENTS or DATAFRAME[column].nunique() <= len(DATAFRAME)-1):
-            DATAFRAME[column].fillna(value='-', inplace=True)
-            cnts = DATAFRAME[column].value_counts()[0:MAX_ELEMENTS].index.values
-            cnts = pd.DataFrame(data=cnts, columns=[column])
-            cnts['CAT']="TOP_ELEMENT"
-            sub_df = pd.merge(DATAFRAME[[column,TARGET]],cnts,on=column,how='left')
-            sub_df = sub_df.dropna().drop(columns=['CAT'])
-            plt.figure(figsize=(W,H))
-            plt.xticks(rotation=90)
-            sns.countplot(x=sub_df[column],hue=TARGET,data=sub_df, order = sub_df[column].value_counts().index)
-            plt.title("Top "+ str(MAX_ELEMENTS)+" Elements of "+column+" by "+TARGET)
-            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0)
-            plt.show()
 
-        elif (DATAFRAME[column].dtype=='<M8[ns]'): 
-            sub_df = DATAFRAME.loc[:,(column,TARGET)]
-            sub_df['Vol'] = 1
-            sub_df = sub_df.pivot_table(index=column,columns=TARGET,values='Vol',aggfunc=sum)
-            sub_df.resample(TIME_RULE).sum().plot.bar(figsize=(W,H))
-            plt.xticks(rotation=90)
-            plt.title(column +" "+TIME_RULE+" distribution by " + TARGET)
-            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0)
-            plt.show()
+    CATEGORY_COLUMNS = DATAFRAME.drop(columns=TARGET).select_dtypes(include=['object', 'category'])
+    TIME_COLUMNS = DATAFRAME.select_dtypes(include=['datetime'])
+    NUMERIC_COLUMNS = DATAFRAME.select_dtypes(include=['number'])
+
+    for column in CATEGORY_COLUMNS:
+        DATAFRAME[column].fillna(value='-', inplace=True)
+        cnts = DATAFRAME[column].value_counts()[0:MAX_ELEMENTS].index.values
+        cnts = pd.DataFrame(data=cnts, columns=[column])
+        cnts['CAT']="TOP_ELEMENT"
+        sub_df = pd.merge(DATAFRAME[[column,TARGET]], cnts, on=column, how='left')
+        sub_df = sub_df.dropna().drop(columns=['CAT'])
+        plt.figure(figsize=(W,H))
+        plt.xticks(rotation=90)
+        sns.countplot(x=sub_df[column],hue=TARGET,data=sub_df, order = sub_df[column].value_counts().index)
+        plt.title("Top "+ str(MAX_ELEMENTS)+" Elements of "+column+" by "+TARGET)
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0)
+        plt.show()
+
+    for column in TIME_COLUMNS:
+        sub_df = DATAFRAME.loc[:,(column,TARGET)]
+        sub_df['Vol'] = 1
+        sub_df = sub_df.pivot_table(index=column,columns=TARGET,values='Vol',aggfunc=sum)
+        sub_df.resample(TIME_RULE).sum().plot.bar(figsize=(W,H))
+        plt.xticks(rotation=90)
+        plt.title(column +" "+TIME_RULE+" distribution by " + TARGET)
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0)
+        plt.show()
     
-        elif (DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='float64' or DATAFRAME[column].dtype=='float32' or DATAFRAME[column].dtype=='int32') and (DATAFRAME[column].nunique()<=MAX_ELEMENTS): 
-            plt.figure(figsize=(W,H))
-            plt.xticks(rotation=90)
-            sns.countplot(x=DATAFRAME[column],hue=TARGET,data=DATAFRAME,order = DATAFRAME[column].value_counts().index)
-            plt.title(column+" Distribution by "+TARGET)
-            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0)
-            plt.show()
-    
-        elif (DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='float64' or DATAFRAME[column].dtype=='int32' or DATAFRAME[column].dtype=='float32') and (DATAFRAME[column].nunique()>MAX_ELEMENTS): 
-            plt.figure(figsize=(W,H))
-            plt.xticks(rotation=90)
-            sns.boxenplot(y=TARGET, x=DATAFRAME[column],data=DATAFRAME, orient='h')
-            plt.title(column+" Distribution by "+TARGET)
-            plt.show()
-        
-        else: print("FEATURE "+"["+column+"] "+"NOT INCLUDED IN ANALYSIS!!!!")
+    for column in NUMERIC_COLUMNS:
+        plt.figure(figsize=(W,H))
+        plt.xticks(rotation=90)
+        sns.boxenplot(y=TARGET, x=DATAFRAME[column],data=DATAFRAME, orient='h')
+        plt.title(column+" Distribution by "+TARGET)
+        plt.show()
 
 def eda_plot_cont(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
     """
@@ -125,45 +111,39 @@ def eda_plot_cont(DATAFRAME, TARGET, MAX_ELEMENTS, TIME_RULE='W', W=8, H=4):
     print("GENERATING AUTOMATIC EXPLORATORY DATAFRAME ANALYSIS PLOTS")
     print("----------------------------------------------------")
     print("----------------------------------------------------")
-    for column in DATAFRAME.columns:
     
-        if (DATAFRAME[column].dtype=='O' or DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='int32' or DATAFRAME[column].dtype=='float64' or DATAFRAME[column].dtype=='float32') and (DATAFRAME[column].nunique() == len(DATAFRAME)):
+    for column in DATAFRAME.columns:
+        if DATAFRAME[column].nunique() == len(DATAFRAME):
             print("High Cardinality Feature: ","[",column, "]"," Possible unique identifier!")
     
-        elif (DATAFRAME[column].dtype=='O') and (DATAFRAME[column].nunique() <= MAX_ELEMENTS):
-            DATAFRAME[column].fillna(value='-', inplace=True)
-            plt.figure(figsize=(W,H))
-            plt.xticks(rotation=90)
-            sns.boxenplot(y=DATAFRAME[column],x=TARGET, data=DATAFRAME, orient='h')
-            plt.title(column+" Distribution by "+TARGET)
-            plt.show()
-    
-        elif (DATAFRAME[column].dtype=='O') and (DATAFRAME[column].nunique() > MAX_ELEMENTS or DATAFRAME[column].nunique() <= len(DATAFRAME)-1):
-            DATAFRAME[column].fillna(value='-', inplace=True)
-            cnts = DATAFRAME[column].value_counts()[0:MAX_ELEMENTS].index.values
-            cnts = pd.DataFrame(data=cnts, columns=[column])
-            cnts['CAT']="TOP_ELEMENT"
-            sub_df = pd.merge(DATAFRAME[[column,TARGET]],cnts,on=column,how='left')
-            sub_df = sub_df.dropna().drop(columns=['CAT'])
-            plt.figure(figsize=(W,H))
-            plt.xticks(rotation=90)
-            sns.boxenplot(y=sub_df[column],x=TARGET,data=sub_df, orient='h')
-            plt.title("Top "+ str(MAX_ELEMENTS)+" Elements of "+column+" by "+TARGET)
-            plt.show()
+    CATEGORY_COLUMNS = DATAFRAME.select_dtypes(include=['object', 'category'])
+    TIME_COLUMNS = DATAFRAME.select_dtypes(include=['datetime'])
+    NUMERIC_COLUMNS = DATAFRAME.select_dtypes(include=['number'])
 
-        elif (DATAFRAME[column].dtype=='<M8[ns]'): 
-            DATAFRAME.loc[:,(column,TARGET)].set_index(column).resample(TIME_RULE).median().plot(figsize=(W,H))
-            plt.title(column +" "+TIME_RULE+" distribution by " + TARGET)
-            plt.show()
+    for column in CATEGORY_COLUMNS:
+        DATAFRAME[column].fillna(value='-', inplace=True)
+        cnts = DATAFRAME[column].value_counts()[0:MAX_ELEMENTS].index.values
+        cnts = pd.DataFrame(data=cnts, columns=[column])
+        cnts['CAT']="TOP_ELEMENT"
+        sub_df = pd.merge(DATAFRAME[[column,TARGET]],cnts,on=column,how='left')
+        sub_df = sub_df.dropna().drop(columns=['CAT'])
+        plt.figure(figsize=(W,H))
+        plt.xticks(rotation=90)
+        sns.boxenplot(y=sub_df[column],x=TARGET,data=sub_df, orient='h')
+        plt.title("Top "+ str(MAX_ELEMENTS)+" Elements of "+column+" by "+TARGET)
+        plt.show()
+
+    for column in TIME_COLUMNS:
+        DATAFRAME.loc[:,(column,TARGET)].set_index(column).resample(TIME_RULE).median().plot(figsize=(W,H))
+        plt.title(column +" "+TIME_RULE+" distribution by " + TARGET)
+        plt.show()
     
-        elif (DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='float64' or DATAFRAME[column].dtype=='int32' or DATAFRAME[column].dtype=='float32'): 
-            plt.figure(figsize=(W,H))
-            plt.xticks(rotation=90)
-            sns.scatterplot(x=DATAFRAME[column],y=TARGET,data=DATAFRAME)
-            plt.title(column+" Distribution by "+TARGET)
-            plt.show()
-    
-        else: print("FEATURE "+"["+column+"] "+"NOT INCLUDED IN ANALYSIS!!!!")
+    for column in NUMERIC_COLUMNS:
+        plt.figure(figsize=(W,H))
+        plt.xticks(rotation=90)
+        sns.scatterplot(x=DATAFRAME[column],y=TARGET,data=DATAFRAME)
+        plt.title(column+" Distribution by "+TARGET)
+        plt.show()
 
 def clean_feature_names(DATAFRAME):
     """
@@ -232,8 +212,6 @@ def get_null_data_photo(DATAFRAME, W=12, H=6):
 def show_correlation(DATAFRAME, TARGET=None):
     """
     DATAFRAME: Pandas DataFrame to be included in the analysis/plot
-    TARGET: Use "None" If the target is (**continuous**) otherwise use the 
-    column name (**categorical**) to be included in the resulting plots as the "Target"
     Note: Resulting plots are considering/including numeric features only 
     """
     import numpy as np
@@ -241,37 +219,20 @@ def show_correlation(DATAFRAME, TARGET=None):
     import seaborn as sns
     sns.set_style('darkgrid')  
     
-    FEATURES = []
-    for column in DATAFRAME.columns:
-        if DATAFRAME[column].dtype != 'O':
-            FEATURES.append(column)
-            
-    if TARGET == None:
-        sns.heatmap(DATAFRAME[FEATURES].corr(method='pearson'),annot=True,cmap='bwr')
-        plt.title('Pearson Correlation Coefficient of Numeric Features')
-        plt.show()
-        sns.heatmap(DATAFRAME[FEATURES].corr(method='kendall'),annot=True,cmap='bwr')
-        plt.title('Kendall Correlation Coefficient of Numeric Features')
-        plt.show()
-        sns.heatmap(DATAFRAME[FEATURES].corr(method='spearman'),annot=True,cmap='bwr')
-        plt.title('Spearman Correlation Coefficient of Numeric Features')
-        plt.show()
-        print('Caution: The Matrix Scatterplot of Numeric Features is using a 20% sample of the DATAFRAME')
-        sns.pairplot(DATAFRAME[FEATURES].sample(frac=0.2))
-    else:
-        FEATURES.append(TARGET)
-        sns.heatmap(DATAFRAME[FEATURES].corr(method='pearson'),annot=True,cmap='bwr')
-        plt.title('Pearson Correlation Coefficient of Numeric Features')
-        plt.show()
-        sns.heatmap(DATAFRAME[FEATURES].corr(method='kendall'),annot=True,cmap='bwr')
-        plt.title('Kendall Correlation Coefficient of Numeric Features')
-        plt.show()
-        sns.heatmap(DATAFRAME[FEATURES].corr(method='spearman'),annot=True,cmap='bwr')
-        plt.title('Spearman Correlation Coefficient of Numeric Features')
-        plt.show()
-        print('Caution: The Matrix Scatterplot of Numeric Features is using a 20% sample of the DATAFRAME')
-        sns.pairplot(DATAFRAME[FEATURES].sample(frac=0.2),hue=TARGET)
+    FEATURES = DATAFRAME.select_dtypes(include=['number']).columns
 
+    sns.heatmap(DATAFRAME[FEATURES].corr(method='pearson'),annot=True,cmap='bwr')
+    plt.title('Pearson Correlation Coefficient of Numeric Features')
+    plt.show()
+    sns.heatmap(DATAFRAME[FEATURES].corr(method='kendall'),annot=True,cmap='bwr')
+    plt.title('Kendall Correlation Coefficient of Numeric Features')
+    plt.show()
+    sns.heatmap(DATAFRAME[FEATURES].corr(method='spearman'),annot=True,cmap='bwr')
+    plt.title('Spearman Correlation Coefficient of Numeric Features')
+    plt.show()
+    print('Caution: The Matrix Scatterplot of Numeric Features is using a 10% sample of the DATAFRAME')
+    sns.pairplot(DATAFRAME[FEATURES].sample(frac=0.1))
+    
 def unsupervised_categorization(DATAFRAME, TEXT, NUM_CATS, STOPWORDS, LANGUAGE='english', MAX_WORDS =1000):
     """
     DATAFRAME: Pandas DataFrame to be included the categorization process
@@ -333,11 +294,11 @@ def reduce_cardinality(DATAFRAME, MAX_ELEMENTS):
     """
     import pandas as pd
     pd.set_option('mode.chained_assignment',None)
-    for column in DATAFRAME.columns:        
-        if (DATAFRAME[column].dtype=='O' or DATAFRAME[column].dtype=='int64' or DATAFRAME[column].dtype=='int32' or DATAFRAME[column].dtype=='float32' or DATAFRAME[column].dtype=='float64') and (DATAFRAME[column].nunique() == len(DATAFRAME)):
+    for column in DATAFRAME.select_dtypes(include=['category', 'object']).columns:      
+        if DATAFRAME[column].nunique() == len(DATAFRAME):
             print("High Cardinality Feature: ","[",column, "]"," Possible unique identifier, excluded from this process!")
         
-        elif (DATAFRAME[column].dtype=='O') and (DATAFRAME[column].nunique() > MAX_ELEMENTS):
+        elif DATAFRAME[column].nunique() > MAX_ELEMENTS:
             counts = DATAFRAME[column].value_counts()
             mask = DATAFRAME[column].isin(counts[MAX_ELEMENTS:].index)
             DATAFRAME[column].loc[mask]="Other"
@@ -659,7 +620,7 @@ def auto_eda_binary_negative_plotly(DATAFRAME, TARGET, LABEL_MAP={"Made":1, "Mis
     
     lr = make_pipeline(MinMaxScaler(feature_range=(0,1)),
                        LogisticRegression(C=0.1, class_weight='balanced', random_state=1234, max_iter=2500, penalty='l1', solver='liblinear'))
-    print("Fitting Logistic Regression")
+    print("Fitting Logistic Regression (L1 Penalty)")
     lr.fit(X, y)
     score = lr.score(X, y)
     score = score*100
