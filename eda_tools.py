@@ -1113,3 +1113,49 @@ def countbar_with_perc(DATAFRAME, CATEGORY, VALUES, W=6, H=4, PAL='tab10', TITLE
     ax[1].set_yticks(np.arange(0,110,10))
     plt.tight_layout()
     plt.show()
+
+def cat_effect_bool_metric(DATAFRAME, CATEGORY, METRIC):
+    """
+    Function that can be used to calculate the effect of every item or element within 
+    a category over the overall metric
+    DATAFRAME: Pandas dataframe
+    CATEGORY: Categorical variable to be used for the MTTR Analysis
+    METRIC: Name of BOOLEAN variable to be analyzed
+    Example: cat_effect_bool_metric(DATAFRAME=df, CATEGORY="Country", METRIC="DSAT")
+    Returns: Dataframe with Top 10 items with highest influence over the metric
+    """
+    GENERAL_FCR = (df[METRIC].sum() / df[METRIC].count()) * 100
+    CATS = DATAFRAME[CATEGORY].unique()
+    res_dict = {}
+    
+    for c in CATS:
+        FCR_WO_SO = (df[lambda x: x[CATEGORY]!=c][METRIC].sum() / df[lambda x: x[CATEGORY]!=c][METRIC].count()) * 100
+        FCR_DIFF = (GENERAL_FCR - FCR_WO_SO)
+        res_dict.update({c: FCR_DIFF})
+    
+    print(f"Overall Metric: {GENERAL_FCR:.6f}")
+    print("Effect of Categories over Metric:")
+    return pd.DataFrame(sorted(res_dict.items(), key=lambda kv:(kv[1], kv[0]), reverse=False)[0:10], columns=["Category", "Effect"])
+
+ def cat_effect_cont_metric(DATAFRAME, CATEGORY, METRIC):
+    """
+    Function that can be used to calculate the effect (based on mean) of every item or element within 
+    a category over the general continuous metric
+    DATAFRAME: Pandas dataframe
+    CATEGORY: Categorical variable to be used for the MTTR Analysis
+    METRIC: Name of continuous numerical variable to be analyzed
+    Example: cat_effect_cont_variable(DATAFRAME=df, CATEGORY="Country", METRIC="MTTR_Hour")
+    Returns: Dataframe with Top 10 items with highest influence over the metric
+    """
+    GENERAL_MEAN = DATAFRAME[METRIC].mean()
+    CATS = DATAFRAME[CATEGORY].unique()
+    res_dict = {}
+    
+    for c in CATS:
+        MEAN_WO_CAT = DATAFRAME[DATAFRAME[CATEGORY]!=c][METRIC].mean()
+        MEAN_DIFF = (GENERAL_MEAN - MEAN_WO_CAT)
+        res_dict.update({c : MEAN_DIFF})
+    
+    print(f"General Mean: {GENERAL_MEAN:.6f}")
+    print("Effect of Categories over Metric:")
+    return pd.DataFrame(sorted(res_dict.items(), key=lambda kv:(kv[1], kv[0]), reverse=True)[0:10], columns=["Category", "Effect"])
