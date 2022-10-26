@@ -1125,12 +1125,12 @@ def cat_effect_bool_metric(DATAFRAME, CATEGORY, METRIC):
     Returns: Dataframe with Top 10 items with highest influence over the metric
     """
     import pandas as pd
-    GENERAL_FCR = (df[METRIC].sum() / df[METRIC].count()) * 100
+    GENERAL_FCR = (DATAFRAME[METRIC].sum() / DATAFRAME[METRIC].count()) * 100
     CATS = DATAFRAME[CATEGORY].unique()
     res_dict = {}
     
     for c in CATS:
-        FCR_WO_SO = (df[lambda x: x[CATEGORY]!=c][METRIC].sum() / df[lambda x: x[CATEGORY]!=c][METRIC].count()) * 100
+        FCR_WO_SO = (DATAFRAME[lambda x: x[CATEGORY]!=c][METRIC].sum() / DATAFRAME[lambda x: x[CATEGORY]!=c][METRIC].count()) * 100
         FCR_DIFF = (GENERAL_FCR - FCR_WO_SO)
         res_dict.update({c: FCR_DIFF})
     
