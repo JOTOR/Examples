@@ -1124,6 +1124,7 @@ def cat_effect_bool_metric(DATAFRAME, CATEGORY, METRIC):
     Example: cat_effect_bool_metric(DATAFRAME=df, CATEGORY="Country", METRIC="DSAT")
     Returns: Dataframe with Top 10 items with highest influence over the metric
     """
+    import pandas as pd
     GENERAL_FCR = (df[METRIC].sum() / df[METRIC].count()) * 100
     CATS = DATAFRAME[CATEGORY].unique()
     res_dict = {}
@@ -1137,7 +1138,7 @@ def cat_effect_bool_metric(DATAFRAME, CATEGORY, METRIC):
     print("Effect of Categories over Metric:")
     return pd.DataFrame(sorted(res_dict.items(), key=lambda kv:(kv[1], kv[0]), reverse=False)[0:10], columns=["Category", "Effect"])
 
- def cat_effect_cont_metric(DATAFRAME, CATEGORY, METRIC):
+def cat_effect_cont_metric(DATAFRAME, CATEGORY, METRIC):
     """
     Function that can be used to calculate the effect (based on mean) of every item or element within 
     a category over the general continuous metric
@@ -1147,6 +1148,7 @@ def cat_effect_bool_metric(DATAFRAME, CATEGORY, METRIC):
     Example: cat_effect_cont_variable(DATAFRAME=df, CATEGORY="Country", METRIC="MTTR_Hour")
     Returns: Dataframe with Top 10 items with highest influence over the metric
     """
+    import pandas as pd
     GENERAL_MEAN = DATAFRAME[METRIC].mean()
     CATS = DATAFRAME[CATEGORY].unique()
     res_dict = {}
