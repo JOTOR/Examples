@@ -1161,3 +1161,22 @@ def cat_effect_cont_metric(DATAFRAME, CATEGORY, METRIC):
     print(f"General Mean: {GENERAL_MEAN:.6f}")
     print("Effect of Categories over Metric:")
     return pd.DataFrame(sorted(res_dict.items(), key=lambda kv:(kv[1], kv[0]), reverse=True)[0:10], columns=["Category", "Effect"])
+
+def init_chart_settings(dark_background=False):
+    """
+    Function to be used to initialize the chart settings with a custom font and color palette
+    """
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    from matplotlib import rcParams
+    
+    rcParams['font.family'] = 'Arial'
+    colors = ["#003134","#00E58E","#FFFFFF","#007173", "#00FFFF", "#CFFF8F", "#1B00EB", "#C400E1", "#42004C", "#FB2C28", "#2A2A2A",
+              "#668385", "#A6F5D6", "#80B8B9", "#CCFFFF", "#ECFFD2", "#8273F4", "#E180F0", "#8E6694", "#FD9593", "#7F7F7F"]
+    
+    if dark_background == True:
+        plt.style.use('dark_background')
+        sns.set_palette(sns.color_palette(colors))
+    else:
+        sns.set_style("darkgrid")
+        sns.set_palette(sns.color_palette(colors))
